@@ -4,11 +4,14 @@ import bots.Bot;
 import bots.CLIBot;
 import bots.GoodBot;
 import bots.RandomBot;
+import main.ui.OnitamaJframe;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -157,15 +160,18 @@ public class Main {
       long mask = GameUtil.createInitialBoard();
       if (startingPlayer == -1) mask = GameUtil.reverse(mask);
       int turn = startingPlayer;
+      OnitamaJframe onitama = new OnitamaJframe(game.niceGameState(mask));
       while (GameUtil.getWin(mask) == 0) {
          Bot currentBot = turn == 1 ? bot1 : bot2;
          System.out.println(currentBot + "'s turn:");
          game.print(turn == 1 ? mask : GameUtil.reverse(mask));
+         onitama.updateState(game.niceGameState(turn == 1 ? mask : GameUtil.reverse(mask)));
          mask = game.getMoves(mask).get(currentBot.move(game, mask));
          mask = GameUtil.reverse(mask);
          turn *= -1;
       }
       game.print(turn == 1 ? mask : GameUtil.reverse(mask));
+      onitama.updateState(game.niceGameState(turn == 1 ? mask : GameUtil.reverse(mask)));
       return turn * GameUtil.getWin(mask);
    }
 
@@ -204,10 +210,18 @@ public class Main {
          }
       }
    }
+   private static List<Card> randomizeCards() {
+      return new Random()
+         .ints(0, cards.size())
+         .distinct()
+         .limit(5)
+         .mapToObj(n -> cards.get(n))
+         .collect(Collectors.toList());
+   }
 
    public static void main(String[] args) {
       Scanner in = new Scanner(System.in);
-      List<Card> cards = chooseCards(in);
+      List<Card> cards = randomizeCards();
       int startingPlayer = chooseStartingPlayer(in);
       System.out.println(play(new CLIBot(in), new GoodBot(10000), startingPlayer, cards));
    }
